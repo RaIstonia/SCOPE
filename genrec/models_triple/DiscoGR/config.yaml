@@ -1,0 +1,62 @@
+metadata: sentence
+
+# Sentence encoder
+sent_emb_model: sentence-transformers/sentence-t5-base
+sent_emb_dim: 768
+sent_emb_pca: 128
+sent_emb_batch_size: 512
+
+# Backbone (GPT-style) config
+max_item_seq_len: 50
+n_embd: 448
+n_layer: 2
+n_head: 4
+n_inner: 1024
+activation_function: gelu_new
+resid_pdrop: 0.0
+embd_pdrop: 0.5
+attn_pdrop: 0.5
+layer_norm_epsilon: 1e-12
+initializer_range: 0.02
+
+# Token / codebook configs
+n_codebook: 32
+codebook_size: 256
+opq_use_gpu: False
+opq_gpu_id: 0
+faiss_omp_num_threads: 32
+
+# RPG / decoding configs
+temperature: 0.07
+num_beams: 50
+n_edges: 50
+propagation_steps: 3
+chunk_size: 1024
+num_workers: 64
+
+n_digit_sh: 8
+n_digit_sem: 16
+n_digit_cf: 8
+
+freeze_sh: false
+freeze_sem: false
+
+# shared_route | shared_route_fixed_diag
+triple_attn_type: shared_route
+
+lambda_orth_triple: 0.1
+
+fusion_method: mean_log_prob
+
+aux_barrier_topk: 10
+
+quantizer_ckpt: ""
+quantizer_meta: ""
+triple_rqvae_variant: "baseline"
+cf_meta_key: "d_cf"
+hidden_sh: 256
+hidden_cf: 256
+d_latent: 128
+
+lambda_cf: 1.0
+lambda_orth: 0.1
