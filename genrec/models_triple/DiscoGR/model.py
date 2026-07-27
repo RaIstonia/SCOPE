@@ -181,7 +181,7 @@ class SharedTripleTransformerBlock(nn.Module):
                 f"Unknown triple_attn_type={attn_type!r}. "
                 f"Available: shared_route | shared_route_fixed_diag"
             )
-        print(f"[TripleStream] triple_attn_type={attn_type}")
+        print(f"[DiscoGR] triple_attn_type={attn_type}")
 
     def forward(self, h_sh, h_s, h_c, attention_mask=None):
         h_sh_n = self.ln_1(h_sh)
@@ -231,7 +231,7 @@ class DiscoGR(AbstractModel):
         sh_stack = self._load_quantizer_levels(config, branch="sh")
         if sh_stack is None:
             d_sh_orig = int(config.get("d_latent", 128))
-            print(f"[Triple/LinearMap] Fallback: random {d_sh_orig}d ShID codebook (no quantizer ckpt).")
+            print(f"[DiscoGR] Fallback: random {d_sh_orig}d ShID codebook (no quantizer ckpt).")
             sh_stack = torch.randn(self.n_digit_sh, self.codebook_size, d_sh_orig) * initializer_range
         d_sh_orig = sh_stack.shape[-1]
 
@@ -255,7 +255,7 @@ class DiscoGR(AbstractModel):
 
         sem_stack = self._load_quantizer_levels(config, branch="sem")
         if sem_stack is None:
-            print("[Triple/LinearMap] Fallback: random 128d SID codebook (no quantizer ckpt).")
+            print("[DiscoGR] Fallback: random 128d SID codebook (no quantizer ckpt).")
             sem_stack = torch.randn(self.n_digit_sem, self.codebook_size, 128) * initializer_range
         d_sem_orig = sem_stack.shape[-1]
 
@@ -279,7 +279,7 @@ class DiscoGR(AbstractModel):
 
         cf_stack = self._load_quantizer_levels(config, branch="cf")
         if cf_stack is None:
-            print("[Triple/LinearMap] Fallback: random CID codebook (no quantizer ckpt). "
+            print("[DiscoGR] Fallback: random CID codebook (no quantizer ckpt). "
                   "Init: normal(std=initializer_range).")
             self.wte_cf = nn.Embedding(V_cf, n_embd)
             nn.init.normal_(self.wte_cf.weight, std=initializer_range)
@@ -300,7 +300,7 @@ class DiscoGR(AbstractModel):
         sh_mode = "frozen+adapter" if self.freeze_sh else "learnable (codebook-init)"
         sem_mode = "frozen+adapter" if self.freeze_sem else "learnable (codebook-init)"
         cf_mode = "learnable (codebook-init)" if cf_stack is not None else "learnable (random-init, fallback)"
-        print(f"[Triple/LinearMap] ShID={sh_mode} (d={d_sh_orig}) | SID={sem_mode} (d={d_sem_orig}) | "
+        print(f"[DiscoGR] ShID={sh_mode} (d={d_sh_orig}) | SID={sem_mode} (d={d_sem_orig}) | "
               f"CID={cf_mode} (d={d_cf_orig_used}) | n_embd={n_embd}")
 
         self.emb_drop = nn.Dropout(config['embd_pdrop'])
@@ -327,7 +327,7 @@ class DiscoGR(AbstractModel):
                 f"got {self.downstream_orth_streams!r}"
             )
         if self.downstream_orth_streams == "all3":
-            print("[TripleStream] downstream_orth_streams=all3 "
+            print("[DiscoGR] downstream_orth_streams=all3 "
                   "(sh⊥sem + sh⊥cf + sem⊥cf)")
 
         self.generate_w_decoding_graph = False
@@ -343,7 +343,7 @@ class DiscoGR(AbstractModel):
                 f"fusion_method must be 'mean_log_prob' or 'entropy_weighted', got {self.fusion_method!r}"
             )
         if self.fusion_method == "entropy_weighted":
-            print("[TripleStream] generate() fusion_method=entropy_weighted (per-user softmax(-H) reweighting)")
+            print("[DiscoGR] generate() fusion_method=entropy_weighted (per-user softmax(-H) reweighting)")
 
         self.aux_head_s_to_c = ResBlock(n_embd)
         self.aux_head_c_to_s = ResBlock(n_embd)
@@ -357,7 +357,7 @@ class DiscoGR(AbstractModel):
         ):
             p.requires_grad_(False)
         self.aux_topk = int(config.get("aux_barrier_topk", 10))
-        print(f"[TripleStream] aux barrier heads enabled (monitor-only, top-{self.aux_topk})")
+        print(f"[DiscoGR] aux barrier heads enabled (monitor-only, top-{self.aux_topk})")
 
     def _map_item_tokens(self) -> torch.Tensor:
         item_id2tokens = torch.zeros((self.dataset.n_items, self.tokenizer.n_digit), dtype=torch.long)
@@ -385,7 +385,7 @@ class DiscoGR(AbstractModel):
         variant = (config.get("triple_rqvae_variant") or "baseline").strip()
 
         if not ckpt_path or not os.path.exists(ckpt_path):
-            print(f"[Triple/LinearMap] quantizer_ckpt not found: {ckpt_path}")
+            print(f"[DiscoGR] quantizer_ckpt not found: {ckpt_path}")
             return None
 
         ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -408,12 +408,12 @@ class DiscoGR(AbstractModel):
             cf_meta_key = config.get("cf_meta_key", "d_cf")
             if cf_meta_key not in meta:
                 raise KeyError(
-                    f"[Triple/LinearMap] meta missing field '{cf_meta_key}'; available: "
+                    f"[DiscoGR] meta missing field '{cf_meta_key}'; available: "
                     f"{[k for k in meta if k.startswith('d_cf')]}"
                 )
             d_cf_orig = int(meta[cf_meta_key])
         else:
-            print(f"[Triple/LinearMap] quantizer_meta not found: {meta_path}. Infer dimensions from checkpoint.")
+            print(f"[DiscoGR] quantizer_meta not found: {meta_path}. Infer dimensions from checkpoint.")
             d_sem_orig = int(state["rqvae_sem.blocks.0.vq.embed.weight"].shape[1])
             d_cf_orig = int(state["rqvae_cf.blocks.0.vq.embed.weight"].shape[1])
 
