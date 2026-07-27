@@ -1,7 +1,5 @@
 # DiscoGR
 
-Minimal release for running `DiscoGR`.
-
 ## Install
 
 ```bash
@@ -10,18 +8,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
-
-## Required files
-
-- `configs/`
-- `genrec/`
-- `tokenizer_triple/` (code + `data_v3_te3l/` embeddings + `tokenized/` splits)
-- `scripts/`
-- `main_triple.py`
-- `cache/AmazonReviews2014/<category>/processed/`
-
-`run_one.py` trains the quantizer when `quantizer_ckpt` is missing, re-exports
-item codes, then trains the generator with checkpoint-based codebook init.
 
 ## Train
 
@@ -68,9 +54,3 @@ CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_checkpoint.py \
   --gpu 0
 ```
 
-## Note
-
-Quantizer `.pt` weights are produced locally under `tokenizer_triple/ckpt_v3_te3l/`
-and are not shipped. Embedding inputs live in `tokenizer_triple/data_v3_te3l/`.
-Shipped `tokenized/` splits are reused after re-export; only `tokenizer_state.json`
-is rewritten to match the newly trained quantizer.
