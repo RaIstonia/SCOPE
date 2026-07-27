@@ -134,15 +134,20 @@ def build_generator_cmd(cfg: dict, gpu: str | None) -> list[str]:
     print(f"[run_one] generator cmd: {env_hint}{' '.join(cmd)}")
     return cmd
 
-def ensure_quantizer(cfg: dict, dry_run: bool, force: bool = False) -> None:
-    ckpt = ROOT / cfg["quantizer_ckpt"]
+def ensure_quantizer(cfg: dict, dry_run: bool, force: bool = False) -> bool:
+    """Train TripleQuantizer when missing (or forced). Returns True if training ran."""
+    ckpt_rel = (cfg.get("quantizer_ckpt") or "").strip()
+    if not ckpt_rel:
+        raise ValueError("configs must set quantizer_ckpt (output path for trained weights)")
+    ckpt = ROOT / ckpt_rel
     if ckpt.exists() and not force:
         print(f"[run_one] quantizer exists: {ckpt}")
-        return
+        return False
     cmd = build_quantizer_train_cmd(cfg)
     print("[run_one] train quantizer:", " ".join(cmd))
     if not dry_run:
         subprocess.run(cmd, cwd=ROOT, check=True)
+    return True
 
 def ensure_tokenized(cfg: dict, dry_run: bool, force: bool = False) -> None:
     tokenized = ROOT / cfg["tokenized_dir"]
@@ -162,6 +167,10 @@ def tokenized_ready(cfg: dict) -> bool:
     state = tokenized / "tokenizer_state.json"
     splits_ok = all((tokenized / split).is_dir() for split in ("train", "val", "test"))
     return state.exists() and splits_ok
+
+def quantizer_ready(cfg: dict) -> bool:
+    ckpt_rel = (cfg.get("quantizer_ckpt") or "").strip()
+    return bool(ckpt_rel) and (ROOT / ckpt_rel).exists()
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -185,13 +194,23 @@ def main() -> None:
     if args.gpu is not None:
         env["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
-    ready = tokenized_ready(cfg)
-
-    if not args.skip_quantizer and not (ready and not args.force_quantizer and not args.force_export):
-        ensure_quantizer(cfg, args.dry_run, force=args.force_quantizer)
+    # Default pipeline: train quantizer if missing -> export codes -> train generator.
+    # Re-export whenever the quantizer was (re)trained so codes match the checkpoint.
+    trained = False
+    if not args.skip_quantizer:
+        trained = ensure_quantizer(cfg, args.dry_run, force=args.force_quantizer)
     if not args.skip_export:
-        ensure_tokenized(cfg, args.dry_run, force=args.force_export)
+        ensure_tokenized(
+            cfg,
+            args.dry_run,
+            force=args.force_export or trained,
+        )
     if not args.skip_generator:
+        if not quantizer_ready(cfg) and not args.dry_run:
+            raise FileNotFoundError(
+                f"quantizer_ckpt missing after pipeline: {cfg.get('quantizer_ckpt')}. "
+                f"Train the quantizer first (do not skip it)."
+            )
         cmd = build_generator_cmd(cfg, args.gpu)
         if not args.dry_run:
             subprocess.run(cmd, cwd=ROOT, check=True, env=env)

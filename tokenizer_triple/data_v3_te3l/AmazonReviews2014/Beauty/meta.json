@@ -1,0 +1,8 @@
+{
+  "n_items": 12102,
+  "d_sem": 512,
+  "category": "Beauty",
+  "dataset": "AmazonReviews2014",
+  "index_note": "row i = item_id; v_sem[i] and v_cf[i] refer to the same item (id2item[i])",
+  "d_cf_128": 128
+}

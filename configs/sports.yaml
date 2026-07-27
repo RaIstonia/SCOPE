@@ -1,10 +1,10 @@
 dataset: AmazonReviews2014
 category: Sports_and_Outdoors
 model: DiscoGR
-quantizer_ckpt: ""
+quantizer_ckpt: tokenizer_triple/ckpt_v3_te3l/AmazonReviews2014/Sports_and_Outdoors/sh16_sem16_cf16/uniform_orth0p5/triple_rqvae_v3.pt
 quantizer_meta: ""
 tokenized_dir: tokenizer_triple/tokenized/AmazonReviews2014/Sports_and_Outdoors/param_probe1017_digit16_sh16
-copy_splits_from: cache/AmazonReviews2014/Sports_and_Outdoors/tokenized_standalone_v3_te3l/codebook256_ncode16_maxlen50
+copy_splits_from: ""
 n_digit_sh: 16
 n_digit_sem: 16
 n_digit_cf: 16

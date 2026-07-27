@@ -13,21 +13,19 @@ pip install -e .
 
 ## Required files
 
-Keep these paths:
-
 - `configs/`
 - `genrec/`
-- `tokenizer_triple/`
+- `tokenizer_triple/` (code + `data_v3_te3l/` embeddings + `tokenized/` splits)
 - `scripts/`
 - `main_triple.py`
 - `cache/AmazonReviews2014/<category>/processed/`
-- `tokenizer_triple/tokenized/AmazonReviews2014/<category>/<run>/`
-  - `tokenizer_state.json`
-  - `train/val/test/data-00000-of-00001.arrow`
-  - `train/val/test/dataset_info.json`
-  - `train/val/test/state.json`
+
+`run_one.py` trains the quantizer when `quantizer_ckpt` is missing, re-exports
+item codes, then trains the generator with checkpoint-based codebook init.
 
 ## Train
+
+Default (quantizer → export → generator):
 
 Beauty:
 
@@ -53,6 +51,13 @@ Yelp:
 CUDA_VISIBLE_DEVICES=0 python scripts/run_one.py configs/yelp.yaml --gpu 0
 ```
 
+Force a fresh quantizer + re-export:
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python scripts/run_one.py configs/beauty.yaml \
+  --gpu 0 --force_quantizer --force_export
+```
+
 ## Evaluate
 
 ```bash
@@ -65,8 +70,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/evaluate_checkpoint.py \
 
 ## Note
 
-Quantizer `.pt` weights are not shipped. DiscoGR falls back to random codebook
-initialization when `quantizer_ckpt` is absent. Pre-exported item codes under
-`tokenizer_triple/tokenized/` are sufficient for generator training.
-`quantizer_meta` is optional; if a local checkpoint is provided later, dimensions
-can be inferred from the weights.
+Quantizer `.pt` weights are produced locally under `tokenizer_triple/ckpt_v3_te3l/`
+and are not shipped. Embedding inputs live in `tokenizer_triple/data_v3_te3l/`.
+Shipped `tokenized/` splits are reused after re-export; only `tokenizer_state.json`
+is rewritten to match the newly trained quantizer.

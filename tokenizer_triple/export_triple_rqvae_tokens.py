@@ -164,6 +164,9 @@ def main():
                 shutil.copytree(src, dst)
                 print(f"Copied {split} from {args.copy_splits_from} -> {out_dir}")
         print(f"\nReady: --tokenized_dir={out_dir} --n_codebook={n_digit}")
+    elif all(os.path.isdir(os.path.join(out_dir, split)) for split in ("train", "val", "test")):
+        print(f"Kept existing train/val/test under {out_dir}")
+        print(f"\nReady: --tokenized_dir={out_dir} --n_codebook={n_digit}")
     else:
         print(
             f"\nCopy train/val/test into {out_dir}, "

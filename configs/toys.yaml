@@ -1,10 +1,10 @@
 dataset: AmazonReviews2014
 category: Toys_and_Games
 model: DiscoGR
-quantizer_ckpt: ""
+quantizer_ckpt: tokenizer_triple/ckpt_v3_te3l/AmazonReviews2014/Toys_and_Games/sh16_sem16_cf16/uniform/triple_rqvae_v3.pt
 quantizer_meta: ""
 tokenized_dir: tokenizer_triple/tokenized/AmazonReviews2014/Toys_and_Games/triple_uniform_sh16_sem16_cf16_v3_te3l
-copy_splits_from: cache/AmazonReviews2014/Toys_and_Games/tokenized_standalone_v3_te3l/codebook256_ncode16_maxlen50
+copy_splits_from: ""
 n_digit_sh: 16
 n_digit_sem: 16
 n_digit_cf: 16

@@ -1,10 +1,10 @@
 dataset: AmazonReviews2014
 category: Yelp
 model: DiscoGR
-quantizer_ckpt: ""
+quantizer_ckpt: tokenizer_triple/ckpt_v3_te3l/AmazonReviews2014/Yelp/sh8_sem8_cf8/uniform/triple_rqvae_v3.pt
 quantizer_meta: ""
 tokenized_dir: tokenizer_triple/tokenized/AmazonReviews2014/Yelp/triple_uniform_sh8_sem8_cf8_v3_te3l
-copy_splits_from: cache/AmazonReviews2014/Yelp/tokenized_standalone_v3_te3l/codebook256_ncode16_maxlen50
+copy_splits_from: ""
 n_digit_sh: 8
 n_digit_sem: 8
 n_digit_cf: 8
