@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 import torch
+from datasets import Dataset
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
@@ -21,6 +22,141 @@ def _build_quantizer(d_sem: int, d_cf: int, args):
         d_latent=args.d_latent,
         lambda_orth=args.lambda_orth,
     )
+
+
+def _load_processed_sequences(root: str, dataset: str, category: str):
+    processed_dir = os.path.join(root, "cache", dataset, category, "processed")
+    seq_path = os.path.join(processed_dir, "all_item_seqs.json")
+    id_map_path = os.path.join(processed_dir, "id_mapping.json")
+    if not (os.path.isfile(seq_path) and os.path.isfile(id_map_path)):
+        return None, None
+
+    with open(seq_path, "r") as f:
+        all_item_seqs = json.load(f)
+    with open(id_map_path, "r") as f:
+        id_mapping = json.load(f)
+    return all_item_seqs, id_mapping
+
+
+def _leave_one_out_from_sequences(all_item_seqs: dict):
+    split_rows = {
+        "train": {"user": [], "item_seq": []},
+        "val": {"user": [], "item_seq": []},
+        "test": {"user": [], "item_seq": []},
+    }
+    for user, item_seq in all_item_seqs.items():
+        split_rows["test"]["user"].append(user)
+        split_rows["test"]["item_seq"].append(item_seq)
+        if len(item_seq) > 1:
+            split_rows["val"]["user"].append(user)
+            split_rows["val"]["item_seq"].append(item_seq[:-1])
+        if len(item_seq) > 2:
+            split_rows["train"]["user"].append(user)
+            split_rows["train"]["item_seq"].append(item_seq[:-2])
+    return {split: Dataset.from_dict(rows) for split, rows in split_rows.items()}
+
+
+def _tokenize_first_n_items(item_seq: list, item2id: dict, max_item_seq_len: int, ignored_label: int):
+    input_ids = [item2id[item] for item in item_seq[:-1]]
+    seq_lens = len(input_ids)
+    attention_mask = [1] * seq_lens
+
+    pad_lens = max_item_seq_len - seq_lens
+    input_ids.extend([0] * pad_lens)
+    attention_mask.extend([0] * pad_lens)
+
+    labels = [item2id[item] for item in item_seq[1:]]
+    labels.extend([ignored_label] * pad_lens)
+    return input_ids, attention_mask, labels, seq_lens
+
+
+def _tokenize_later_items(item_seq: list, item2id: dict, max_item_seq_len: int, ignored_label: int, pad_labels: bool = True):
+    input_ids = [item2id[item] for item in item_seq[:-1]]
+    seq_lens = len(input_ids)
+    attention_mask = [1] * seq_lens
+    labels = [ignored_label] * seq_lens
+    labels[-1] = item2id[item_seq[-1]]
+
+    pad_lens = max_item_seq_len - seq_lens
+    input_ids.extend([0] * pad_lens)
+    attention_mask.extend([0] * pad_lens)
+    if pad_labels:
+        labels.extend([ignored_label] * pad_lens)
+    return input_ids, attention_mask, labels, seq_lens
+
+
+def _tokenize_example(example: dict, split: str, item2id: dict, max_item_seq_len: int, ignored_label: int):
+    item_seq = example["item_seq"][0]
+    if split == "train":
+        n_return_examples = max(len(item_seq) - max_item_seq_len, 1)
+        input_ids, attention_mask, labels, seq_lens = _tokenize_first_n_items(
+            item_seq=item_seq[: min(len(item_seq), max_item_seq_len + 1)],
+            item2id=item2id,
+            max_item_seq_len=max_item_seq_len,
+            ignored_label=ignored_label,
+        )
+        all_input_ids, all_attention_mask, all_labels, all_seq_lens = (
+            [input_ids],
+            [attention_mask],
+            [labels],
+            [seq_lens],
+        )
+        for i in range(1, n_return_examples):
+            cur_item_seq = item_seq[i : i + max_item_seq_len + 1]
+            input_ids, attention_mask, labels, seq_lens = _tokenize_later_items(
+                cur_item_seq,
+                item2id=item2id,
+                max_item_seq_len=max_item_seq_len,
+                ignored_label=ignored_label,
+            )
+            all_input_ids.append(input_ids)
+            all_attention_mask.append(attention_mask)
+            all_labels.append(labels)
+            all_seq_lens.append(seq_lens)
+        return {
+            "input_ids": all_input_ids,
+            "attention_mask": all_attention_mask,
+            "labels": all_labels,
+            "seq_lens": all_seq_lens,
+        }
+
+    input_ids, attention_mask, labels, seq_lens = _tokenize_later_items(
+        item_seq=item_seq[-(max_item_seq_len + 1) :],
+        item2id=item2id,
+        max_item_seq_len=max_item_seq_len,
+        ignored_label=ignored_label,
+        pad_labels=False,
+    )
+    return {
+        "input_ids": [input_ids],
+        "attention_mask": [attention_mask],
+        "labels": [labels[-1:]],
+        "seq_lens": [seq_lens],
+    }
+
+
+def _build_and_save_splits(out_dir: str, all_item_seqs: dict, item2id: dict, max_item_seq_len: int, ignored_label: int):
+    split_datasets = _leave_one_out_from_sequences(all_item_seqs)
+    for split, dataset in split_datasets.items():
+        tokenized = dataset.map(
+            lambda t: _tokenize_example(
+                t,
+                split=split,
+                item2id=item2id,
+                max_item_seq_len=max_item_seq_len,
+                ignored_label=ignored_label,
+            ),
+            batched=True,
+            batch_size=1,
+            remove_columns=dataset.column_names,
+            num_proc=1,
+            desc=f"Tokenizing {split} set",
+        )
+        split_dir = os.path.join(out_dir, split)
+        if os.path.exists(split_dir):
+            shutil.rmtree(split_dir)
+        tokenized.save_to_disk(split_dir)
+        print(f"Built {split} split from cache processed data -> {split_dir}")
 
 def main():
     parser = argparse.ArgumentParser(description="Export TripleQuantizer codes as tokenizer_state.")
@@ -168,10 +304,21 @@ def main():
         print(f"Kept existing train/val/test under {out_dir}")
         print(f"\nReady: --tokenized_dir={out_dir} --n_codebook={n_digit}")
     else:
-        print(
-            f"\nCopy train/val/test into {out_dir}, "
-            f"or rerun with --copy_splits_from=<tokenized_dir>"
-        )
+        all_item_seqs, id_mapping = _load_processed_sequences(ROOT, args.dataset, args.category)
+        if all_item_seqs is not None and id_mapping is not None:
+            _build_and_save_splits(
+                out_dir=out_dir,
+                all_item_seqs=all_item_seqs,
+                item2id=id_mapping["item2id"],
+                max_item_seq_len=max_token_seq_len,
+                ignored_label=-100,
+            )
+            print(f"\nReady: --tokenized_dir={out_dir} --n_codebook={n_digit}")
+        else:
+            print(
+                f"\nCopy train/val/test into {out_dir}, "
+                f"or rerun with --copy_splits_from=<tokenized_dir>"
+            )
 
 if __name__ == "__main__":
     main()

@@ -205,6 +205,12 @@ def main() -> None:
             args.dry_run,
             force=args.force_export or trained,
         )
+        if not tokenized_ready(cfg) and not args.dry_run:
+            raise FileNotFoundError(
+                f"tokenized_dir incomplete after export: {cfg.get('tokenized_dir')}. "
+                "Expected tokenizer_state.json plus train/val/test. "
+                "Check export_triple_rqvae_tokens.py output."
+            )
     if not args.skip_generator:
         if not quantizer_ready(cfg) and not args.dry_run:
             raise FileNotFoundError(

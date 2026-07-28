@@ -37,6 +37,10 @@ Yelp:
 CUDA_VISIBLE_DEVICES=0 python scripts/run_one.py configs/yelp.yaml --gpu 0
 ```
 
+If `quantizer_ckpt` or `tokenized_dir` is missing, `run_one.py` rebuilds them.
+When no pre-exported `train/val/test` splits are available, the export step
+reconstructs HuggingFace splits from `cache/.../processed/`.
+
 Force a fresh quantizer + re-export:
 
 ```bash

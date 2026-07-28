@@ -1,9 +1,9 @@
 dataset: AmazonReviews2014
 category: Beauty
 model: DiscoGR
-quantizer_ckpt: tokenizer_triple/ckpt_v3_te3l/AmazonReviews2014/Beauty/sh16_sem16_cf16/uniform_orth0/triple_rqvae_v3.pt
+quantizer_ckpt: tokenizer_triple/ckpt_v3_te3l/AmazonReviews2014/Beauty/sh16_sem16_cf16/triple_rqvae_v3.pt
 quantizer_meta: ""
-tokenized_dir: tokenizer_triple/tokenized/AmazonReviews2014/Beauty/triple_uniform_sh16_sem16_cf16_v3_te3l_orth0
+tokenized_dir: tokenizer_triple/tokenized/AmazonReviews2014/Beauty/sh16_sem16_cf16
 copy_splits_from: ""
 n_digit_sh: 16
 n_digit_sem: 16
@@ -33,7 +33,7 @@ n_head: 4
 n_embd: 448
 n_inner: 1024
 generate_w_decoding_graph: false
-rand_seed: 42
+rand_seed: 2024
 run_id: discogr_beauty
 ckpt_dir: outputs/ckpts
 log_dir: outputs/logs

@@ -20,24 +20,21 @@ lightning_logs/
 config.secrets.yaml
 **/config.secrets.yaml
 
-# Checkpoints — trained locally by run_one.
+# Quantizer / model checkpoints — produced by run_one, not shipped
 *.pt
 *.pth
 *.ckpt
 tokenizer_triple/ckpt_v3_te3l/
 
-# Large embedding / PCA assets elsewhere; ship quantizer inputs under data_v3_te3l.
+# Embedding / PCA assets elsewhere; only ship v_sem / v_cf under data_v3_te3l
 **/*.npy
 **/pca_*.npy
 **/v_sem.npy
 **/v_cf*.npy
 !tokenizer_triple/data_v3_te3l/**/v_sem.npy
 !tokenizer_triple/data_v3_te3l/**/v_cf*.npy
-!tokenizer_triple/data_v3_te3l/**/pca_*.npy
-!tokenizer_triple/data_v3_te3l/**/pca_mean.npy
-!tokenizer_triple/data_v3_te3l/**/pca_components.npy
 
-# Legacy rewritten-bundle assets (removed from the original pipeline layout)
+# Legacy rewritten-bundle assets
 data/AmazonReviews2014/**/generator.pt
 data/AmazonReviews2014/**/quantizer.pt
 data/AmazonReviews2014/**/sequences/
@@ -45,7 +42,7 @@ data/AmazonReviews2014/**/item_codes.npy
 data/AmazonReviews2014/**/v_*.npy
 data/AmazonReviews2014/**/pca_*.npy
 
-# Release ships splits under tokenizer_triple/tokenized/; keep cache raw/standalone local.
+# Keep cache raw / standalone tokenized local
 cache/AmazonReviews2014/**/raw/
 cache/AmazonReviews2014/**/tokenized_standalone_v3_te3l/
 
