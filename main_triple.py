@@ -7,7 +7,7 @@ from genrec.utils import parse_command_line_args
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model', type=str, default='DiscoGR', help='Model name')
+    parser.add_argument('--model', type=str, default='SCOPE', help='Model name')
     parser.add_argument('--dataset', type=str, default='AmazonReviews2014', help='Dataset name')
     parser.add_argument('--checkpoint', type=str, default=None, help='Checkpoint path')
     parser.add_argument('--tokenized_dir', type=str, default=None,
@@ -17,7 +17,7 @@ def parse_args():
 
 def _print_run_banner(args, command_line_configs):
     print("=" * 88, flush=True)
-    print("[DiscoGR Run]", flush=True)
+    print("[SCOPE Run]", flush=True)
     print("-" * 88, flush=True)
     print(f"  {'model':>26s} = {args.model}", flush=True)
     print(f"  {'dataset':>26s} = {args.dataset}", flush=True)

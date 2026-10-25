@@ -1,4 +1,4 @@
-"""Launch the original DiscoGR pipeline for one star config.
+"""Launch the original SCOPE pipeline for one star config.
 
 Steps:
   1) train TripleQuantizer if the checkpoint is missing
@@ -86,7 +86,7 @@ def build_generator_cmd(cfg: dict, gpu: str | None) -> list[str]:
     cmd = [
         sys.executable,
         str(ROOT / "main_triple.py"),
-        f"--model={cfg.get('model', 'DiscoGR')}",
+        f"--model={cfg.get('model', 'SCOPE')}",
         f"--dataset={cfg['dataset']}",
         f"--category={cfg['category']}",
         f"--tokenized_dir={ROOT / cfg['tokenized_dir']}",
@@ -174,7 +174,7 @@ def quantizer_ready(cfg: dict) -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("config", type=str, help="Path to a DiscoGR star YAML")
+    parser.add_argument("config", type=str, help="Path to a SCOPE star YAML")
     parser.add_argument("--gpu", type=str, default=None)
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--skip_quantizer", action="store_true")

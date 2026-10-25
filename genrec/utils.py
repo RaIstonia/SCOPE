@@ -131,7 +131,7 @@ def log(message, accelerator, logger, level='info'):
 def get_tokenizer(model_name: str):
     """Retrieves the tokenizer for a given model name.
 
-    DiscoGR release ships pre-tokenized splits; use ``tokenized_dir`` +
+    SCOPE release ships pre-tokenized splits; use ``tokenized_dir`` +
     ``LoadedTokenizer`` in the normal path. Per-model tokenizer modules are
     not included.
     """

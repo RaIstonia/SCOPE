@@ -114,7 +114,7 @@ class Trainer:
         project_name = get_file_name(self.config, suffix='')
         init_kwargs = {"tensorboard": {"flush_secs": 60}}
         if bool(self.config.get("use_wandb", False)):
-            project_name = (self.config.get("wandb_project") or "DiscoGR")
+            project_name = (self.config.get("wandb_project") or "SCOPE")
             wandb_kwargs = {}
             if self.config.get("wandb_entity"):
                 wandb_kwargs["entity"] = self.config["wandb_entity"]

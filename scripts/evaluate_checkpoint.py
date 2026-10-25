@@ -75,7 +75,7 @@ def main() -> None:
         config_dict["quantizer_meta"] = str(ROOT / cfg["quantizer_meta"])
 
     pipe = Pipeline(
-        model_name=cfg.get("model", "DiscoGR"),
+        model_name=cfg.get("model", "SCOPE"),
         dataset_name=cfg["dataset"],
         checkpoint_path=str(Path(args.checkpoint).resolve()),
         config_dict=config_dict,

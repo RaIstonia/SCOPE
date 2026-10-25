@@ -9,9 +9,9 @@ reproducibility: True
 
 # Tracking / experiment management
 # - Set use_wandb=True to enable Weights & Biases logging (via Accelerate trackers).
-# - Command line overrides must use --key=value, e.g. --use_wandb=True --wandb_project="DiscoGR"
+# - Command line overrides must use --key=value, e.g. --use_wandb=True --wandb_project="SCOPE"
 use_wandb: False
-wandb_project: DiscoGR
+wandb_project: SCOPE
 wandb_entity: ~
 wandb_group: ~
 wandb_name: ~

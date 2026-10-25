@@ -1,4 +1,6 @@
-# DiscoGR
+# SCOPE
+
+Semantic–Collaborative Decoupling Quantization for Generative Recommendation
 
 ## Install
 

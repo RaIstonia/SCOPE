@@ -187,7 +187,7 @@ def main():
     args = parser.parse_args()
 
     assert args.n_codes_sh == args.n_codes_sem == args.n_codes_cf, (
-        "DiscoGR shares codebook_size per digit; keep n_codes_sh == n_codes_sem == n_codes_cf"
+        "SCOPE shares codebook_size per digit; keep n_codes_sh == n_codes_sem == n_codes_cf"
     )
     codebook_size = args.n_codes_sh
 

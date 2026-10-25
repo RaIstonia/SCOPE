@@ -1,1 +1,1 @@
-from genrec.models_triple.DiscoGR.model import DiscoGR
+from genrec.models_triple.SCOPE.model import SCOPE
